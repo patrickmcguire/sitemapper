@@ -24,7 +24,7 @@ class Sitemapper
       @edges[current_relative_uri] = []
 
       status_success, page_html = get_page(current_relative_uri)
-      if status_sucess # eventually resolves, otherwise skip
+      if status_success # eventually resolves, otherwise skip
         parsed_page = Nokogiri::HTML.parse(page_html)
         all_anchors = parsed_page.css('a')
         all_links = parsed_page.css('link')
