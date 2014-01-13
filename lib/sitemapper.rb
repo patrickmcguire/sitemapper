@@ -70,4 +70,22 @@ class Sitemapper
     status = request.perform
     [status, request.body]
   end
+
+  def anchors(page_html)
+    parsed_page = Nokogiri::HTML.parse(page_html)
+    all_anchors = parsed_page.css('a')
+    all_anchors.collect {|a| a.attributes['href'].value}
+  end
+
+  def links(page_html)
+    parsed_page = Nokogiri::HTML.parse(page_html)
+    all_links = parsed_page.css('link')
+    all_links.collect {|l| l.attributes['rel'].value}
+  end
+
+  def scripts(page_html)
+    parsed_page = Nokogiri::HTML.parse(page_html)
+    all_scripts = parsed_page.css('script')
+    all_scripts.collect {|s| s.attributes['src'].value}
+  end
 end
