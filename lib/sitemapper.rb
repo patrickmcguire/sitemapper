@@ -23,12 +23,8 @@ class Sitemapper
       @seen_resources << current_relative_uri
       @edges[current_relative_uri] = []
 
-      request = Curl::Easy.new(@domain + current_relative_uri)
-      request.follow_location = true
-      request.max_redirects = 10
-
-      if request.perform # eventually resolves, otherwise skip
-        page_html = request.body
+      status_success, page_html = get_page(current_relative_uri)
+      if status_sucess # eventually resolves, otherwise skip
         parsed_page = Nokogiri::HTML.parse(page_html)
         all_anchors = parsed_page.css('a')
         all_links = parsed_page.css('link')
@@ -37,14 +33,6 @@ class Sitemapper
         process_uris(current_relative_uri, all_links, FOLLOW_SUBLINKS_NO)
 
         all_links = parsed_page.css('link')
-      end
-
-      case response.response_code
-      when 200
-
-      when 301
-
-      when 302
       end
     end
   end
@@ -73,5 +61,13 @@ class Sitemapper
         @process_queue << uri
       end
     end
+  end
+
+  def get_page(relative_uri)
+    request = Curl::Easy.new(@domain + relative_uri)
+    request.follow_location = true
+    request.max_redirects = 10
+    status = request.perform
+    [status, request.body]
   end
 end
