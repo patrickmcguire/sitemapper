@@ -25,12 +25,13 @@ class Sitemapper
 
       status_success, page_html = get_page(current_relative_uri)
       if status_success # eventually resolves, otherwise skip
-        parsed_page = Nokogiri::HTML.parse(page_html)
-        all_anchors = parsed_page.css('a')
-        all_links = parsed_page.css('link')
+        all_anchors = anchors(page_html)
+        all_links = links(page_html)
+        all_scripts = scripts(page_html)
 
         process_uris(current_relative_uri, all_anchors, FOLLOW_SUBLINKS_YES)
         process_uris(current_relative_uri, all_links, FOLLOW_SUBLINKS_NO)
+        process_uris(current_relative_uri, all_scripts, FOLLOW_SUBLINKS_NO)
 
         all_links = parsed_page.css('link')
       end
@@ -38,7 +39,7 @@ class Sitemapper
   end
 
   private 
-  def process_hrefs(current_relative_uri, hrefs, follow_sublinks)
+  def process_uris(current_relative_uri, hrefs, follow_sublinks)
     hrefs.each do |href|
       attributes = href.attributes
       uri = attributes['href'].value
