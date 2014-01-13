@@ -4,11 +4,10 @@ require 'nokogiri'
 require 'public_suffix'
 
 class Sitemapper
-  FOLLOW_SUBLINKS::TRUE = 1
-  FOLLOW_SUBLINKS::FALSE = 2
+  FOLLOW_SUBLINKS_YES = 1
+  FOLLOW_SUBLINKS_NO = 2
 
-  attr_accessible :domain, :crawl_subdomain, :edges, :seen_resources, :processing_queue
-
+  attr_accessor :domain, :crawl_subdomain, :edges, :seen_resources, :processing_queue
 
   def initialize(domain, crawl_subdomains=true)
     @domain = domain.chomp('/')
@@ -34,8 +33,8 @@ class Sitemapper
         all_anchors = parsed_page.css('a')
         all_links = parsed_page.css('link')
 
-        process_uris(current_relative_uri, all_anchors, FOLLOW_SUBLINKS::TRUE)
-        process_uris(current_relative_uri, all_links, FOLLOW_SUBLINKS::FALSE)
+        process_uris(current_relative_uri, all_anchors, FOLLOW_SUBLINKS_YES)
+        process_uris(current_relative_uri, all_links, FOLLOW_SUBLINKS_NO)
 
         all_links = parsed_page.css('link')
       end
