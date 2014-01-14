@@ -12,4 +12,5 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'nokogiri'
   s.add_runtime_dependency 'curb'
   s.add_runtime_dependency 'public_suffix'
+  s.add_runtime_dependency 'capybara-webkit'
 end
