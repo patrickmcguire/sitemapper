@@ -8,98 +8,95 @@ describe "Sitemapper" do
 
   describe "requests" do
     before(:each) do
-      @offsite = 'http://wikipedia.org'
-      @onsite_rel = '/morestuff'
-      @onsite_absolute = 'http://example.com/morestuff'
-      @onsite_subdomain = 'http://subdomain.example.com/morestuff'
-
-      @offsite_css = 'http://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css'
-      @onsite_rel_css = '/stylesheet.css'
-      @onsite_absolute_css = 'http://example.com/stylesheet.css'
-      @onsite_subdomain_css = 'http://subdomain.example.com/stylesheet.css'
-
-      @offsite_js = 'http://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.js'
-      @onsite_rel_js = '/application.js'
-      @onsite_absolute_js = 'http://example.com/application.js'
-      @onsite_subdomain_js = 'http://subdomain.example.com/application.js'
-
-      @document = <<EOS
-      <html>
-        <head>
-          <link rel="#{@offsite_css}" />
-          <link rel="#{@onsite_rel_css}" />
-          <link rel="#{@onsite_absolute_css}" />
-          <link rel="#{@onsite_subdomain_css}" />
-          <script src="#{@offsite_js}" type="text/javascript"></script>
-          <script src="#{@onsite_rel_js}" type="text/javascript"></script>
-          <script src="#{@onsite_absolute_js}" type="text/javascript"></script>
-          <script src="#{@onsite_subdomain_js}" type="text/javascript"></script>
-        </head>
-        <body>
-          <a href="#{@offsite}"></a>
-          <a href="#{@onsite_rel}"></a>
-          <a href="#{@onsite_absolute}"></a>
-          <a href="#{@onsite_subdomain}"></a>
-        </body>
-      </html>
-EOS
 
       @sitemapper.stub(:get_page).and_return([true, @document])
-    end
-
-    # making sure my data is what I think it is
-    describe "has the right elements" do
-      it "should have the offsite anchor" do
-        (@sitemapper.send(:anchors, @document).include? @offsite).should be_true
-      end
-
-      it "shouuld have the rel anchor" do
-        (@sitemapper.send(:anchors, @document).include? @onsite_rel).should be_true
-      end
-
-      it "should have the absolute anchor" do
-        (@sitemapper.send(:anchors, @document).include? @onsite_absolute).should be_true
-      end
-
-      it "should have the subdomain anchor" do
-        (@sitemapper.send(:anchors, @document).include? @onsite_subdomain).should be_true
-      end
-
-      it "should have the offsite link" do
-        (@sitemapper.send(:links, @document).include? @offsite_css).should be_true
-      end
-
-      it "shouuld have the rel link" do
-        (@sitemapper.send(:links, @document).include? @onsite_rel_css).should be_true
-      end
-
-      it "should have the absolute link" do
-        (@sitemapper.send(:links, @document).include? @onsite_absolute_css).should be_true
-      end
-
-      it "should have the subdomain link" do
-        (@sitemapper.send(:links, @document).include? @onsite_subdomain_css).should be_true
-      end
-
-      it "should have the offsite script" do
-        (@sitemapper.send(:scripts, @document).include? @offsite_js).should be_true
-      end
-
-      it "shouuld have the rel script" do
-        (@sitemapper.send(:scripts, @document).include? @onsite_rel_js).should be_true
-      end
-
-      it "should have the absolute script" do
-        (@sitemapper.send(:scripts, @document).include? @onsite_absolute_js).should be_true
-      end
-
-      it "should have the subdomain script" do
-        (@sitemapper.send(:scripts, @document).include? @onsite_subdomain_js).should be_true
-      end
     end
   end
 
   describe "crawl" do
+    before(:each) do
+      @onsite = '/'
+      @offsite = 'http://google.com'
+      @onsite_subdomain = 'http://sub.example.com'
+      @sitemapper.stub(:anchors).and_return([@onsite, @offsite, @onsite_subdomain])
+    end
 
+    describe "crawling subdomains" do
+      before(:each) do
+        @sitemapper.process_uris("http://#{@domain}", @sitemapper.anchors, Sitemapper::FOLLOW_SUBLINKS_YES)
+      end
+
+      it "should add the onsite domain" do
+        @sitemapper.processing_queue.should include("http://#{@domain}#{@onsite}")
+      end
+
+      it "should not add the offsite domain" do
+        @sitemapper.processing_queue.should_not include(@offsite)
+      end
+
+      it "should add the onsite subdomain" do
+        @sitemapper.processing_queue.should include(@onsite_subdomain)
+      end
+    end
+
+    describe "not crawling subdomains" do
+      before(:each) do
+        @sitemapper.crawl_subdomains = false
+        @sitemapper.process_uris("http://#{@domain}", @sitemapper.anchors, Sitemapper::FOLLOW_SUBLINKS_YES)
+      end
+
+      it "should add the onsite domain" do
+        @sitemapper.processing_queue.should include("http://#{@domain}#{@onsite}")
+      end
+
+      it "should not add the offsite domain" do
+        @sitemapper.processing_queue.should_not include(@offsite)
+      end
+
+      it "should not add the onsite subdomain" do
+        @sitemapper.processing_queue.should_not include(@onsite_subdomain)
+      end
+    end
+  end
+
+  describe "edge map" do
+    before(:each) do
+      @site = "http://#{@domain}"
+      @root = "#{@site}/"
+      @onsite = '/index.html'
+      @offsite = 'http://google.com'
+      @onsite_subdomain = "http://sub.#{@domain}"
+      @css = '/application.css'
+      @js = '/application.js'
+      @sitemapper.stub(:anchors).and_return([@onsite, @offsite, @onsite_subdomain])
+      @sitemapper.stub(:links).and_return([@css])
+      @sitemapper.stub(:scripts).and_return([@js])
+      @sitemapper.generate_sitemap
+    end
+
+    # they're going to be all the same, everything linked to everything else
+    describe "html files" do
+      describe "root url" do
+        it "should have the onsite" do
+          @sitemapper.edges[@root].should include("http://#{@domain}#{@onsite}")
+        end
+
+        it "should have the offsite" do
+          @sitemapper.edges[@root].should include(@offsite)
+        end
+
+        it "should have the onsite subdomain" do
+          @sitemapper.edges[@root].should include(@onsite_subdomain)
+        end
+
+        it "should have the css" do
+          @sitemapper.edges[@root].should include("#{@site}#{@css}")
+        end
+
+        it "should have the js" do
+          @sitemapper.edges[@root].should include("#{@js}#{@css}")
+        end
+      end
+    end
   end
 end
