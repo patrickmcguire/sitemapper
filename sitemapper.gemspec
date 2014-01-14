@@ -11,5 +11,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rspec'
   s.add_runtime_dependency 'public_suffix'
   s.add_runtime_dependency 'capybara-webkit'
-  s.add_runtime_dependency 'sinatra'
+  s.add_runtime_dependency 'launchy'
 end

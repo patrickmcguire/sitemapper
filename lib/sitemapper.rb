@@ -107,12 +107,12 @@ class Sitemapper
     query_filter(absolute_uri, 'script', :src)
   end
 
-  def query_filter(uri, query, attribute_symbol)
+  def query_filter(absolute_uri, query, attribute_symbol)
     wrapped_uri = URI(absolute_uri)
     Capybara.app_host = "http://#{wrapped_uri.host}"
     visit(wrapped_uri.request_uri)
     all_items = all(query)
     all_items_extracted = all_items.collect {|i| i[attribute_symbol]}
-    srcs.reject {|i| i.nil?}
+    all_items_extracted.reject {|i| i.nil?}
   end
 end
