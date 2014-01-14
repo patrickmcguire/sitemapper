@@ -81,8 +81,8 @@ describe "Sitemapper" do
           @sitemapper.edges[@root].should include("http://#{@domain}#{@onsite}")
         end
 
-        it "should have the offsite" do
-          @sitemapper.edges[@root].should include(@offsite)
+        it "should not have the offsite" do
+          @sitemapper.edges[@root].should_not include(@offsite)
         end
 
         it "should have the onsite subdomain" do
@@ -94,7 +94,7 @@ describe "Sitemapper" do
         end
 
         it "should have the js" do
-          @sitemapper.edges[@root].should include("#{@js}#{@css}")
+          @sitemapper.edges[@root].should include("#{@site}#{@js}")
         end
       end
     end

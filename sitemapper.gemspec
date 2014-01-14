@@ -9,8 +9,7 @@ Gem::Specification.new do |s|
   s.files       = ["lib/sitemapper.rb"]
   s.license       = 'MIT'
   s.add_development_dependency 'rspec'
-  s.add_runtime_dependency 'nokogiri'
-  s.add_runtime_dependency 'curb'
   s.add_runtime_dependency 'public_suffix'
   s.add_runtime_dependency 'capybara-webkit'
+  s.add_runtime_dependency 'sinatra'
 end
